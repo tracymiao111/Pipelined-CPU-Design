@@ -1,5 +1,4 @@
-module cacheline_adaptor
-(
+module cacheline_adaptor (
     input clk,
     input reset_n,
 
@@ -20,99 +19,81 @@ module cacheline_adaptor
     input resp_i
 );
 
-    /* list all states needed for cacheline adaptor */
-    enum int unsigned{
-        IDLE, READ_1, WRITE_1, READ_2, WRITE_2, FINISHED
+    /* state description */
+    enum int unsigned {
+        IDLE, READ_BURST1, WRITE_BURST1, READ_BURST2, WRITE_BURST2, COMPLETED
     } state;
 
-    logic [1:0] counter;
-    logic [255:0] line_temp; //the buffer
-    logic [31:0] address_temp;
+    /* counter & buffer */
+    logic [1:0] burst_counter; 
+    logic [255:0] line_buffer; 
+    logic [31:0] address_buffer;
 
-
-    function void set_defaults();
-        resp_o = 1'b0;
-        write_o = 1'b0;
-        read_o = 1'b0;
-    endfunction
-
+    /* default & output assignments */
     always_comb begin 
-        set_defaults();
-        address_o = address_temp;
-        line_o = line_temp;
-        burst_o = line_temp[64*counter +: 64];
-        // read_o = (state == (READ_1||READ_2));
-        // write_o = (state == (WRITE_1||WRITE_2));
-        // resp_o = (state == FINISHED);
+        {resp_o, write_o, read_o} = 3'b000;
+        address_o = address_buffer;
+        line_o = line_buffer;
+        burst_o = line_buffer[64*burst_counter +: 64];
+
         case (state)
-            READ_1: read_o = 1'b1;
-            READ_2: read_o = 1'b1;
-            WRITE_1: write_o = 1'b1;
-            WRITE_2: write_o = 1'b1;
-            FINISHED: resp_o = 1'b1;
-            default: set_defaults();
+            READ_BURST1, READ_BURST2: read_o = 1'b1;
+            WRITE_BURST1, WRITE_BURST2: write_o = 1'b1;
+            COMPLETED: resp_o = 1'b1;
         endcase
     end
 
+    /* state transition description */
     always_ff @(posedge clk) begin
         if (~reset_n) begin
             state <= IDLE;
         end else begin
             unique case (state)
                 IDLE: begin
-                    address_temp <= address_i;
+                    address_buffer <= address_i;
                     if (read_i) begin
-                        state <= READ_1;
-                        counter <= 2'b0;
+                        state <= READ_BURST1;
+                        burst_counter <= 2'b0;
                     end else if (write_i) begin
-                        state <= WRITE_1;
-                        line_temp <= line_i;
-                        counter <= 2'b0;
-                    end else begin
-                        ;
+                        state <= WRITE_BURST1;
+                        line_buffer <= line_i;
+                        burst_counter <= 2'b0;
                     end
                 end
 
-                READ_1: begin
+                READ_BURST1: begin
                     if (resp_i) begin
-                        state <= READ_2;
-                        counter <= 2'b01;
-                        line_temp[63:0] <= burst_i;
-                    end else begin
-                        ;
+                        state <= READ_BURST2;
+                        burst_counter <= 2'b01;
+                        line_buffer[63:0] <= burst_i;
                     end
                 end
 
-                READ_2: begin
-                    if (counter == 2'b11) begin
-                        state <= FINISHED;
+                READ_BURST2: begin
+                    line_buffer[64*burst_counter +: 64] <= burst_i;
+                    burst_counter <= burst_counter + 1'b1;
+                    if (burst_counter == 2'b11) begin
+                        state <= COMPLETED;
                     end 
-                    line_temp[64*counter +: 64] <= burst_i;
-                    counter <= counter + 1'b1;
                 end
 
-                WRITE_1: begin
+                WRITE_BURST1: begin
                     if (resp_i) begin
-                        state <= WRITE_2;
-                        counter <= 2'b01;
-                    end else begin
-                        ;
+                        state <= WRITE_BURST2;
+                        burst_counter <= 2'b01;
                     end
                 end
 
-                WRITE_2: begin
-                    if (counter == 2'b11) begin
-                        state <= FINISHED;
-                    end else begin
-                        ;
+                WRITE_BURST2: begin
+                    burst_counter <= burst_counter + 1'b1;
+                    if (burst_counter == 2'b11) begin
+                        state <= COMPLETED;
                     end
-                    counter <= counter + 1'b1;
                 end
 
-                FINISHED: state <= IDLE;
-                default: ;
+                COMPLETED: state <= IDLE;
             endcase
         end
     end
 
-endmodule: cacheline_adaptor
+endmodule
