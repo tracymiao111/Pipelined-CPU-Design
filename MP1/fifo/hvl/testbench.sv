@@ -35,6 +35,57 @@ task reset();
     ##(1);
 endtask : reset
 
+task check_reset();
+    @(tb_clk);
+        assert (itf.rdy == 1'b1) else begin
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, RESET_DOES_NOT_CAUSE_READY_O);
+            report_error (RESET_DOES_NOT_CAUSE_READY_O);
+        end
+    @(tb_clk);
+endtask: check_reset
+
+task check_enq();
+    itf.valid_i <= 1'b1;
+    for (int i = 0; i <= CAP_P - 1; ++i) begin
+        itf.data_i <= i;
+        @(tb_clk);
+        assert (itf.data_o == 0) else begin
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, INCORRECT_DATA_O_ON_YUMI_I);
+            report_error (INCORRECT_DATA_O_ON_YUMI_I);
+        end
+    end
+    itf.valid_i <= 1'b0;
+    @(tb_clk);
+endtask: check_enq
+
+task check_deq();
+    itf.yumi <= 1'b1;
+    for (int i = 1; i <= CAP_P; ++i) begin
+        assert (itf.data_o == (i - 1)) else begin
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, INCORRECT_DATA_O_ON_YUMI_I);
+            report_error (INCORRECT_DATA_O_ON_YUMI_I);
+        end
+        @(tb_clk);
+    end
+    itf.yumi <= 1'b0;
+endtask
+
+task check_enq_deq();
+    itf.valid_i <= 1'b1;
+    for (int i = 0; i < CAP_P; i++) begin
+        itf.data_i <= i;
+        ##(1);
+        itf.yumi <= 1'b1;
+        ##(1);
+        assert (itf.data_o == (((i + 1) / 2))) else begin
+            $error ("%0d: %0t: %s error detected", `__LINE__, $time, INCORRECT_DATA_O_ON_YUMI_I);
+            report_error (INCORRECT_DATA_O_ON_YUMI_I);
+        end
+        itf.yumi <= 1'b0;
+    end
+    itf.valid_i <= 1'b0;
+endtask
+
 function automatic void report_error(error_e err); 
     itf.tb_report_dut_error(err);
 endfunction : report_error
@@ -45,8 +96,12 @@ initial begin
     reset();
     /************************ Your Code Here ***********************/
     // Feel free to make helper tasks / functions, initial / always blocks, etc.
-
-
+    check_reset();
+    check_enq();
+    check_deq();
+    reset();
+    check_reset();
+    check_enq_deq();
     /***************************************************************/
     // Make sure your test bench exits by calling itf.finish();
     itf.finish();
