@@ -1,9 +1,9 @@
 module cmp
 import rv32i_types::*; 
 (
-    input branch_funct3_t cmpop_i,
-    input rv32i_word a_i,
-    input rv32i_word b_i,
+    input  branch_funct3_t cmpop_i,
+    input  rv32i_word a_i,
+    input  rv32i_word b_i,
     output logic cmp_o
 );
 
