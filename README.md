@@ -9,8 +9,8 @@ Welcome to my repository documenting my journey through the ECE411 course at the
 - **Components**: Verifications of Multiplier, FIFO (First In, First Out), and CAM (Content Addressable Memory).
 - **Special Focus**: Implementation of a Cacheline Adaptor in HDL.
 
-### MP2: Design of a Multicycle RISC-V Processor
-- **Objective**: To delve into the intricacies of a multicycle processor architecture based on the RISC-V instruction set.
+### MP2: Design of a Multicycle RV32I Processor
+- **Objective**: To delve into the intricacies of a multicycle processor architecture based on the RV32I instruction set.
 
 ### MP3: Advanced Cache Implementation
 - **Details**: Development of a 4-Way Set Associative Cache.
