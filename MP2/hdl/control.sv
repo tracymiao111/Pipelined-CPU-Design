@@ -4,7 +4,8 @@ import rv32i_types::*; /* Import types defined in rv32i_types.sv */
 (
     input clk,
     input rst,
-    /* signals to mem */
+    
+    /* signals with mem */
     input logic mem_resp,
     output logic mem_read,
     output logic mem_write,
@@ -349,7 +350,7 @@ always_comb begin : next_state_logic
         calc_addr : begin
             case (opcode)
                 op_load : next_states = ld1;
-                op_store: next_states = ld2;
+                op_store: next_states = st1;
                 default : next_states = fetch1; //todo
             endcase
         end
@@ -359,7 +360,7 @@ always_comb begin : next_state_logic
     endcase
 end
 
-always_ff @(posedge clk)begin: next_state_assignment
+always_ff @(posedge clk) begin: next_state_assignment
     /* Assignment of next state on clock edge */
     if (rst) state <= fetch1;
     else     state <= next_states;

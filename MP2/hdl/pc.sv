@@ -1,10 +1,10 @@
 module pc 
 import rv32i_types::*;
 (
-    input clk_i,
-    input rst_i,
-    input load_i,
-    input rv32i_word pc_in,
+    input  clk_i,
+    input  rst_i,
+    input  load_i,
+    input  rv32i_word pc_in,
     output rv32i_word pc_out 
 );
 

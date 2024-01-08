@@ -1,11 +1,13 @@
 module datapath
 import rv32i_types::*;
 (
-    input clk,
-    input rst,
-    input rv32i_word mem_rdata,
-    output rv32i_word mem_wdata, // signal used by RVFI Monitor
-    /* You will need to connect more signals to your datapath module */
+    input  logic       clk,
+    input  logic       rst,
+
+    /* signals with mem */
+    input  rv32i_word mem_rdata,
+    output rv32i_word mem_wdata, 
+    output rv32i_word mem_address,
 
     /* signals from control */
     input pcmux::pcmux_sel_t pcmux_sel,
@@ -15,12 +17,12 @@ import rv32i_types::*;
     input marmux::marmux_sel_t marmux_sel,
     input cmpmux::cmpmux_sel_t cmpmux_sel,
     input alu_ops aluop,
-    input logic load_pc,
-    input logic load_ir,
-    input logic load_regfile,
-    input logic load_mar,
-    input logic load_mdr,
-    input logic load_data_out,
+    input logic   load_pc,
+    input logic   load_ir,
+    input logic   load_regfile,
+    input logic   load_mar,
+    input logic   load_mdr,
+    input logic   load_data_out,
     input branch_funct3_t cmpop,
 
     /* signals to control */
@@ -28,8 +30,8 @@ import rv32i_types::*;
     output logic [2:0] funct3,
     output logic [6:0] funct7,
     output logic br_en,
-    output logic [4:0] rs1,
-    output logic [4:0] rs2,
+    output rv32i_reg rs1,
+    output rv32i_reg [4:0] rs2,
     output logic [1:0] byte_sel
 );
 
@@ -38,12 +40,11 @@ rv32i_word pcmux_out, pc_out;
 rv32i_word mdrreg_out;
 /*****************************************************************************/
 rv32i_word i_imm, s_imm, b_imm, u_imm, j_imm;
-logic [4:0] rd;
+rv32i_reg rd;
 rv32i_word rs1_out, rs2_out;
 rv32i_word regfilemux_out;
 rv32i_word alumux1_out, alumux2_out ,alu_out;
 rv32i_word marmux_out;
-rv32i_word mem_address;
 rv32i_word cmpmux_out;
 /***************************** Registers *************************************/
 // Keep Instruction register named `IR` for RVFI Monitor
@@ -121,9 +122,9 @@ end: mdo_ff
 always_comb begin
     if (opcode == op_store) begin
         unique case (funct3)
-            sw: mem_wdata = mem_data_out;
-            sh: mem_wdata = byte_sel[1]? (mem_data_out << 16):(mem_data_out);
-            sb: mem_wdata = mem_wdata << (byte_sel * 4);
+            sw     : mem_wdata = mem_data_out;
+            sh     : mem_wdata = byte_sel[1]? (mem_data_out << 16):(mem_data_out);
+            sb     : mem_wdata = mem_wdata << (byte_sel * 4);
             default: mem_wdata = mem_data_out;
         endcase 
     end else begin
@@ -169,8 +170,8 @@ always_comb begin : MUXES
         regfilemux::pc_plus4: regfilemux_out = pc_out + 4;
         regfilemux::lb      : regfilemux_out = {{24{mdrreg_out[(byte_sel + 1) * 8 - 1]}}, mdrreg_out[((byte_sel + 1) * 8 - 1) -: 8]};
         regfilemux::lbu     : regfilemux_out = {{24{1'b0}}, mdrreg_out[((byte_sel + 1) * 8 - 1) -: 8]};
-        regfilemux::lh      : regfilemux_out = {{16{mdrreg_out[(byte_sel + 1) * 16 - 1]}}, mdrreg_out[((byte_sel + 1) * 16 - 1) -: 16]};
-        regfilemux::lhu     : regfilemux_out = {{16{1'b0}}, mdrreg_out[((byte_sel + 1) * 16 - 1) -: 16]};
+        regfilemux::lh      : regfilemux_out = {{16{mdrreg_out[(byte_sel[1] + 1) * 16 - 1]}}, mdrreg_out[((byte_sel[1] + 1) * 16 - 1) -: 16]};
+        regfilemux::lhu     : regfilemux_out = {{16{1'b0}}, mdrreg_out[((byte_sel[1] + 1) * 16 - 1) -: 16]};
     endcase
 
     unique case (marmux_sel)

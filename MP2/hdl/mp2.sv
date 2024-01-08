@@ -2,10 +2,10 @@
 module mp2
 import rv32i_types::*;
 (
-    input clk,
-    input rst,
-    input mem_resp,
-    input rv32i_word mem_rdata,
+    input  clk,
+    input  rst,
+    input  mem_resp,
+    input  rv32i_word mem_rdata,
     output logic mem_read,
     output logic mem_write,
     output logic [3:0] mem_byte_enable,
@@ -25,6 +25,8 @@ alumux::alumux2_sel_t alumux2_sel;
 regfilemux::regfilemux_sel_t regfilemux_sel;
 marmux::marmux_sel_t marmux_sel;
 cmpmux::cmpmux_sel_t cmpmux_sel;
+
+
 logic load_ir, load_mar, load_mdr, load_data_out;
 logic [2:0] funct3;
 logic [6:0] funct7;
@@ -32,9 +34,11 @@ logic br_en;
 logic [4:0] rs1;
 logic [4:0] rs2;
 logic [1:0] byte_sel;
-alu_ops aluop;
+
+
+alu_ops         aluop;
 branch_funct3_t cmpop;
-rv32i_opcode opcode;
+rv32i_opcode    opcode;
 /*****************************************************************************/
 
 /* Instantiate MP 1 top level blocks here */
