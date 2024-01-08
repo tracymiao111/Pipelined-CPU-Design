@@ -31,7 +31,7 @@ import rv32i_types::*;
     output logic [6:0] funct7,
     output logic br_en,
     output rv32i_reg rs1,
-    output rv32i_reg [4:0] rs2,
+    output rv32i_reg rs2,
     output logic [1:0] byte_sel
 );
 
@@ -40,7 +40,7 @@ rv32i_word pcmux_out, pc_out;
 rv32i_word mdrreg_out;
 /*****************************************************************************/
 rv32i_word i_imm, s_imm, b_imm, u_imm, j_imm;
-rv32i_reg rd;
+rv32i_reg  rd;
 rv32i_word rs1_out, rs2_out;
 rv32i_word regfilemux_out;
 rv32i_word alumux1_out, alumux2_out ,alu_out;
