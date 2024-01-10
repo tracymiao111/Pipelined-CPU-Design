@@ -131,16 +131,16 @@ module cache_datapath #(
         );
     end endgenerate
 
-            ff_array #(.s_index(s_index),
-                   .width(num_ways - 1)) plru_array(
-            .clk0       (clk),
-            .rst0       (rst),
-            .csb0       (1'b0),
-            .web0       (plru_web),
-            .addr0      (idx),
-            .din0       (plru_i),       
-            .dout0      (plru_o)
-        );
+    ff_array #(.s_index(s_index),
+               .width(num_ways - 1)) plru_array(
+    .clk0       (clk),
+    .rst0       (rst),
+    .csb0       (1'b0),
+    .web0       (plru_web),
+    .addr0      (idx),
+    .din0       (plru_i),       
+    .dout0      (plru_o)
+   );
 
     /************* plru update logic *****************/
     always_comb begin
