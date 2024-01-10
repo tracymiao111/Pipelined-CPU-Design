@@ -27,12 +27,31 @@ module cache #(
     input   logic           pmem_resp
 );
 
+/* state some internal singal between control & datapah */
+logic hit_sig;
+logic dirty_sig;
+logic allo_sig;
+logic rep_sig;
+logic load_data;
+logic load_tag;
+logic load_valid;
+logic load_dirty;
+logic load_plru;
+logic valid_i;
+logic dirty_i;
+
+logic [s_mask - 1 : 0] mem_byte_enable256;
+logic [s_line - 1 : 0] mem_rdata256;
+logic [s_line - 1 : 0] mem_wdata256;
+
+assign mem_byte_enable256 = mem_byte_enable;
+assign mem_rdata          = mem_rdata256;
+assign mem_wdata256       = mem_wdata;
+
 cache_control control
-(
-);
+(.*);
 
 cache_datapath datapath
-(
-);
+(.*);
 
 endmodule : cache

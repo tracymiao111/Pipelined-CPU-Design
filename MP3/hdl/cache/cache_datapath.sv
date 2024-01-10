@@ -8,35 +8,32 @@ module cache_datapath #(
 )(
     input   logic                         clk,
     input   logic                         rst,
-
     /******************* with CPU ***********************/
     input   logic      [31:0]             mem_address,
     input   logic      [31:0]             mem_byte_enable256,
     input   logic      [s_line - 1 : 0]   mem_wdata256,
     output  logic      [s_line - 1 : 0]   mem_rdata256,
-
     /******************* with MEM ***********************/
     input   logic      [s_line - 1 : 0]   pmem_rdata,
     output  logic      [s_line - 1 : 0]   pmem_wdata,
     output  logic      [31:0]             pmem_address,
-
     /***************** with CONTROL **********************/
-    input   logic                         is_allocate,
-    input   logic                         use_replace,
+    input   logic                         allo_sig,
+    input   logic                         rep_sig,
     input   logic                         load_data,
     input   logic                         load_tag,
     input   logic                         load_valid,
     input   logic                         load_dirty,
     input   logic                         load_plru,
-    input   logic                         valid_in,
-    input   logic                         dirty_in,
-    output  logic                         is_hit,
-    output  logic                         is_dirty
+    input   logic                         valid_i,
+    input   logic                         dirty_i,
+    output  logic                         hit_sig,
+    output  logic                         dirty_sig
 );
             localparam                     num_ways = 4;
             localparam                     way_bits  = $clog2(num_ways) - 1;
             logic      [s_index  - 1 : 0]  idx;
-            logic      [way_bits     : 0]  replace_way, hit;
+            logic      [way_bits     : 0]  rep_idx, hit_idx;
             logic      [num_ways - 1 : 0]  hit_way;
             logic      [s_line   - 1 : 0]  cache_out;
             logic      [way_bits     : 0]  way_idx;
@@ -72,16 +69,16 @@ module cache_datapath #(
     endfunction 
 
     function void initialization2();
-        way_idx   = 2'b0;
-        is_hit    = 1'b0;
-        hit       = 2'b0;    
+        way_idx = 2'b0;
+        hit_sig = 1'b0;
+        hit_idx = 2'b0;    
     endfunction   
 
     always_comb begin
         initialization1();
         tag_i              = mem_address[31:(s_offset + s_index)]; 
         idx                = mem_address[(s_offset + s_index - 1) : (s_offset)];
-        is_dirty           = dirty_o    [replace_way];
+        dirty_sig          = dirty_o    [rep_idx];
         data_web [way_idx] = load_data  ? 1'b0 : 1'b1; //low active
         tag_web  [way_idx] = load_tag   ? 1'b0 : 1'b1; //low active
         valid_web[way_idx] = load_valid ? 1'b0 : 1'b1; //low active
@@ -116,7 +113,7 @@ module cache_datapath #(
             .csb0       (1'b0),
             .web0       (valid_web[i]),
             .addr0      (idx),
-            .din0       (valid_in),       
+            .din0       (valid_i),       
             .dout0      (valid_o[i])
         );
 
@@ -126,7 +123,7 @@ module cache_datapath #(
             .csb0       (1'b0),
             .web0       (dirty_web[i]),
             .addr0      (idx),
-            .din0       (dirty_in),       
+            .din0       (dirty_i),       
             .dout0      (dirty_o[i])
         );
     end endgenerate
@@ -145,9 +142,9 @@ module cache_datapath #(
     /************* plru update logic *****************/
     always_comb begin
         unique case (plru_o[0])
-            1'b0:    replace_way = plru_o[1] ? 2'b01 : 2'b00;
-            1'b1:    replace_way = plru_o[2] ? 2'b11 : 2'b10;
-            default: replace_way = plru_o[1] ? 2'b01 : 2'b00;
+            1'b0:    rep_idx = plru_o[1] ? 2'b01 : 2'b00;
+            1'b1:    rep_idx = plru_o[2] ? 2'b11 : 2'b10;
+            default: rep_idx = plru_o[1] ? 2'b01 : 2'b00;
         endcase
 
 
@@ -164,14 +161,14 @@ module cache_datapath #(
         initialization2();
         for (int i = 0; i < num_ways; i++) begin
             hit_way[i] = valid_o[i] && (mem_address[31:9] == tag_o[i]); 
-            if (hit_way[i]) hit = i[1:0]; 
+            if (hit_way[i]) hit_idx = i[1:0]; 
         end
 
-        is_hit    = |hit_way;  
-        way_idx   = (use_replace | (~is_hit))? replace_way : hit;
+        hit_sig   = |hit_way;  
+        way_idx   = (rep_sig | (~hit_sig))? rep_idx : hit_idx;
         cache_out = data_o[way_idx];
 
-        if (is_allocate) begin
+        if (allo_sig) begin
             data_mask = 32'hFFFFFFFF;
             data_i    = pmem_rdata;
             tag_out   = mem_address[31:9];

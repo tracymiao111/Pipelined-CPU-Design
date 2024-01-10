@@ -10,17 +10,17 @@ module cache_control (
     output logic pmem_read,
     output logic pmem_write,
     /***************** with DATAPATH *********************/
-    input  logic is_hit,
-    input  logic is_dirty,
-    output logic is_allocate,
-    output logic use_replace,
+    input  logic hit_sig,
+    input  logic dirty_sig,
+    output logic allo_sig,
+    output logic rep_sig,
     output logic load_data,
     output logic load_tag,
     output logic load_valid,
     output logic load_dirty,
     output logic load_plru,
-    output logic valid_in,
-    output logic dirty_in
+    output logic valid_i,
+    output logic dirty_i
 );
 
 enum int unsigned{
@@ -29,25 +29,25 @@ enum int unsigned{
 } state, next_state;
 
 function void initialization();
-    {mem_resp, pmem_read, pmem_write}              = 3'b0;
-    {load_data, load_tag, load_valid, load_dirty}  = 4'b0;
-    {is_allocate, use_replace}                     = 2'b0;
-    {valid_in, dirty_in}                           = 2'b0;
+    {mem_resp, pmem_read, pmem_write}                         = 3'b0;
+    {load_data, load_tag, load_valid, load_dirty, load_plru}  = 5'b0;
+    {allo_sig, rep_sig}                                       = 2'b0;
+    {valid_i, dirty_i}                                        = 2'b0;
 endfunction
 
 function void TAG_COMPARE_ACTIONS();
-    {load_plru, mem_resp}             = {2{is_hit}};
-    {load_dirty, load_data, dirty_in} = {3{is_hit && mem_write}};
+    {load_plru, mem_resp}             = {2{hit_sig}};
+    {load_dirty, load_data, dirty_i}  = {3{hit_sig && mem_write}};
 endfunction
 
 function void ALLOCATE_ACTIONS();
-    {valid_in, dirty_in}                           = 2'b10;
+    {valid_i, dirty_i}                             = 2'b10;
     {load_data, load_tag, load_valid, load_dirty}  = 4'hF;
-    {is_allocate, pmem_read, use_replace}          = 3'b111;
+    {allo_sig, pmem_read, rep_sig}                 = 3'b111;
 endfunction
 
 function void WRITE_BACK_ACTIONS();
-    {use_replace, pmem_write} = 2'b11;
+    {rep_sig, pmem_write} = 2'b11;
 endfunction
 
 always_comb begin
@@ -65,7 +65,7 @@ always_comb begin
     next_state = state;
     case (state)
         IDLE       : next_state = (mem_read || mem_write)? TAG_COMPARE : IDLE;
-        TAG_COMPARE: next_state = is_hit? IDLE : (is_dirty? (WRITE_BACK) : (ALLOCATE));
+        TAG_COMPARE: next_state = hit_sig? IDLE : (dirty_sig? (WRITE_BACK) : (ALLOCATE));
         ALLOCATE   : next_state = pmem_resp? TAG_COMPARE : ALLOCATE;
         WRITE_BACK : next_state = pmem_resp? ALLOCATE : WRITE_BACK;
         default    : next_state = IDLE; 
