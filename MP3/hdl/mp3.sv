@@ -1,4 +1,4 @@
-module mp3
+module cpu  
 import rv32i_types::*;
 (
     input   logic           clk,
@@ -85,4 +85,4 @@ import rv32i_types::*;
         .resp_i             (bmem_resp)
     );
 
-endmodule : mp3
+endmodule : cpu
