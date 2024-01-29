@@ -1,4 +1,4 @@
-# ECE411 2023: Personal and Collaborative Projects Overview
+# Computer Organization & Design: Personal and Collaborative Projects Overview
 
 ## Introduction
 Welcome to my repository documenting my journey through the ECE411 course at the University of Illinois at Urbana-Champaign in 2023. This repository serves as a personal review and a showcase of the projects I completed, ranging from individual assignments to collaborative works.
