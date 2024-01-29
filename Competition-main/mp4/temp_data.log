@@ -1,0 +1,28 @@
+time = 1274361000; 	2062 ps		; rv32im, m_extension, all_untuned_feature
+time = 6070430000; 	10000 ps	; rv32im, m_extension, all_untuned_feature
+time = 2911666000;	2062 ps		; rv32i, m_extension, all_untuned_feature 
+time = 14007400000;	10000 pc	; rv32i, m_extension, all_untuned_feature
+
+2062 is not working anymore, too bad; but it can almost hit the slack
+try to tuned now, risky, time = 1274361000
+
+stable time 2175
+
+
+
+
+
+New Info:
+L1 cacheline reduction and L2 same size is successful
+
+Keep in mind L1 instruction is using registers
+
+	L1 instruction : 1 way, cacheline: 128 bits, 8 sets(3 bits)
+	L1 data: 4 way, cacheline: 128 bits, 16 sets (4 bits)
+	L2 unified: 4 way, cacheline: 256 bits, 16 sets (4 bits)
+	
+	rv32im: 1453338000 ps
+	Total cell area:                119860.185123
+	clock period: 					2090 ps
+
+
