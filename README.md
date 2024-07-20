@@ -18,5 +18,5 @@ Welcome to my repository documenting my journey through the ECE411 course at the
 
 ### MP4: Collaborative Project - Pipelined RISCV CPU
 - Collaborated with Dongming Liu & Elijah Ye (Good Teammates).
-- **Project Scope**: Design and implementation of a pipelined CPU based on the RISC-V architecture, showcasing teamwork and some advanced CPU design techniques including M-extension, fully parameterized cache, L2 unified cache and simple prefetching. More details could be find in **folder MP4**.
+- **Project Scope**: Design and implementation of a pipelined CPU based on the RISC-V architecture, showcasing teamwork and some advanced CPU design techniques including M-extension, fully parameterized cache, L2 unified cache and simple prefetching. More details could be find in **Competition-main**.
 
